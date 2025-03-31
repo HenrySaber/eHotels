@@ -1,0 +1,60 @@
+const pool = require('../db');
+
+// GET all reservations
+exports.getAllReservations = async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM Location_reservation');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch reservations' });
+  }
+};
+
+// POST create a reservation
+exports.createReservation = async (req, res) => {
+  const { check_in_date, check_out_date, payment_status, room_id, guest_ssn, employee_ssn } = req.body;
+  try {
+    const result = await pool.query(`
+      INSERT INTO reservation (check_in_date, check_out_date, payment_status, room_id, guest_ssn, employee_ssn)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING *;
+    `, [check_in_date, check_out_date, payment_status, room_id, guest_ssn, employee_ssn]);
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to create reservation' });
+  }
+};
+
+// PUT update reservation
+exports.updateReservation = async (req, res) => {
+  const { id } = req.params;
+  const { check_in_date, check_out_date, payment_status, room_id, guest_ssn, employee_ssn } = req.body;
+  try {
+    const result = await pool.query(`
+      UPDATE reservation
+      SET check_in_date = $1,
+          check_out_date = $2,
+          payment_status = $3,
+          room_id = $4,
+          guest_ssn = $5,
+          employee_ssn = $6
+      WHERE reservation_id = $7
+      RETURNING *;
+    `, [check_in_date, check_out_date, payment_status, room_id, guest_ssn, employee_ssn, id]);
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update reservation' });
+  }
+};
+
+// DELETE reservation
+exports.deleteReservation = async (req, res) => {
+  const { id } = req.params;
+  try {
+    await pool.query('DELETE FROM reservation WHERE reservation_id = $1', [id]);
+    res.status(204).send();
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete reservation' });
+  }
+};
