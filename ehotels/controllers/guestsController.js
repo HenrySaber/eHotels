@@ -3,7 +3,7 @@ const pool = require('../db');
 // GET all guests
 exports.getAllGuests = async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM Client');
+    const result = await pool.query('SELECT * FROM guest');
     res.json(result.rows);
   } catch (error) {
     console.error(error);
@@ -49,7 +49,7 @@ exports.updateGuest = async (req, res) => {
 exports.deleteGuest = async (req, res) => {
   const { guest_ssn } = req.params;
   try {
-    await pool.query('DELETE FROM Client WHERE guest_ssn = $1', [guest_ssn]);
+    await pool.query('DELETE FROM guest WHERE guest_ssn = $1', [guest_ssn]);
     res.status(204).send();
   } catch (err) {
     console.error(err);

@@ -3,23 +3,42 @@ const pool = require('../db');
 // GET all reservations
 exports.getAllReservations = async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM Location_reservation');
+    const result = await pool.query('SELECT * FROM reservation');
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch reservations' });
   }
 };
 
-// POST create a reservation
+// POST create a reservation with overlap check
 exports.createReservation = async (req, res) => {
   const { check_in_date, check_out_date, payment_status, room_id, guest_ssn, employee_ssn } = req.body;
+
   try {
+    // 1. Check for conflicting reservations
+    const conflictCheck = await pool.query(`
+      SELECT * FROM reservation
+      WHERE room_id = $1
+      AND NOT (
+        $2 >= check_out_date OR $3 <= check_in_date
+      )
+    `, [room_id, check_in_date, check_out_date]);
+
+    if (conflictCheck.rows.length > 0) {
+      return res.status(409).json({
+        error: 'Room is already reserved for the selected date range.'
+      });
+    }
+
+    // 2. Insert new reservation
     const result = await pool.query(`
       INSERT INTO reservation (check_in_date, check_out_date, payment_status, room_id, guest_ssn, employee_ssn)
       VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING *;
     `, [check_in_date, check_out_date, payment_status, room_id, guest_ssn, employee_ssn]);
+
     res.status(201).json(result.rows[0]);
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to create reservation' });
@@ -30,6 +49,7 @@ exports.createReservation = async (req, res) => {
 exports.updateReservation = async (req, res) => {
   const { id } = req.params;
   const { check_in_date, check_out_date, payment_status, room_id, guest_ssn, employee_ssn } = req.body;
+
   try {
     const result = await pool.query(`
       UPDATE reservation
@@ -42,7 +62,9 @@ exports.updateReservation = async (req, res) => {
       WHERE reservation_id = $7
       RETURNING *;
     `, [check_in_date, check_out_date, payment_status, room_id, guest_ssn, employee_ssn, id]);
+
     res.json(result.rows[0]);
+
   } catch (err) {
     res.status(500).json({ error: 'Failed to update reservation' });
   }
