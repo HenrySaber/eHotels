@@ -49,6 +49,13 @@ const RoomSearch = () => {
   };
 
   const handleConfirmBooking = async () => {
+    const guest_ssn = "921-341-000";
+
+    if (!bookingDates.check_in || !bookingDates.check_out) {
+      setConfirmation('❌ Please select both check-in and check-out dates.');
+      return;
+    }
+
     try {
       const res = await fetch(`http://localhost:3000/api/reservations`, {
         method: 'POST',
@@ -58,7 +65,7 @@ const RoomSearch = () => {
           check_out_date: bookingDates.check_out,
           payment_status: true,
           room_id: selectedRoom.room_id,
-          guest_ssn: 'TEMP-GUEST-1',
+          guest_ssn,
           employee_ssn: null
         })
       });
@@ -67,7 +74,8 @@ const RoomSearch = () => {
         setConfirmation('✅ Booking confirmed!');
         setSelectedRoom(null);
       } else {
-        setConfirmation('❌ Booking failed. Please try different dates.');
+        const errorData = await res.json();
+        setConfirmation(`❌ Booking failed: ${errorData.error}`);
       }
     } catch (err) {
       console.error('Booking error:', err);
@@ -121,7 +129,7 @@ const RoomSearch = () => {
           </button>
         </div>
 
-        {/* Booking Dates Above Room Cards */}
+        {/* Booking Panel */}
         {selectedRoom && (
           <div className="mb-10 bg-gray-700 p-4 rounded text-center">
             <h3 className="text-xl font-semibold mb-2">Booking Room #{selectedRoom.room_id}</h3>
