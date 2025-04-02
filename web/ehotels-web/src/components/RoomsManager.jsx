@@ -36,11 +36,21 @@ const RoomsManager = () => {
   };
 
   const handleAddRoom = async () => {
+    const roomWithDefaults = {
+      price: newRoom.price || 100.00,
+      capacity: newRoom.capacity || 'single',
+      area: newRoom.area || 20,
+      sea_view: newRoom.sea_view || false,
+      mountain_view: newRoom.mountain_view || false,
+      extendable: newRoom.extendable || false,
+      hotel_id: newRoom.hotel_id || 1
+    };
+
     try {
       const res = await fetch('http://localhost:3000/api/rooms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newRoom)
+        body: JSON.stringify(roomWithDefaults)
       });
 
       if (res.ok) {
