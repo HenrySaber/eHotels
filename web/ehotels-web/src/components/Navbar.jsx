@@ -9,9 +9,6 @@ const Navbar = () => {
         <h1 className="text-2xl font-bold">eHotels</h1>
         <ul className="flex gap-6 text-sm md:text-base">
           <li>
-            <Link to="/" className="hover:text-blue-400 transition">Home</Link>
-          </li>
-          <li>
             <Link to="/search" className="hover:text-blue-400 transition">Search Rooms</Link>
           </li> 
         </ul>
