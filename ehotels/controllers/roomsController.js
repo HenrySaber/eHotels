@@ -45,8 +45,8 @@ exports.getAvailableRooms = async (req, res) => {
       params.push(parseInt(area));
     }
     if (hotelChain) {
-      query += ` AND c.chain_id = $${i++}`;
-      params.push(parseInt(hotelChain));
+      query += ` AND c.chain_name ILIKE $${i++}`;
+      params.push(`%${hotelChain}%`);
     }
     if (hotelCategory) {
       const star = parseInt(hotelCategory[0]); // from "3 Star" get 3

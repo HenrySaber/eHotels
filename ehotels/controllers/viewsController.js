@@ -1,6 +1,5 @@
 const pool = require('../db');
 
-// GET: Available rooms per area
 // GET: /api/views/available-rooms-zone?zone=Rainford%20Vancouver
 exports.getAvailableRoomsPerArea = async (req, res) => {
     const { zone } = req.query;
