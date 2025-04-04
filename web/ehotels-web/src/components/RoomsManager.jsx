@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-const hotelChains = ["Chain A", "Chain B", "Chain C", "Chain D", "Chain E"];
+const hotelChains = ["Chain 1", "Chain 2", "Chain 3", "Chain 4", "Chain 5"];
 const hotelCategories = ["1 Star", "2 Star", "3 Star", "4 Star", "5 Star"];
 
 const RoomsManager = () => {
