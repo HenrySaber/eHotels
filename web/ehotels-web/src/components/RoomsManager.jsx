@@ -1,16 +1,19 @@
-// File: src/components/RoomsManager.jsx
 import React, { useEffect, useState } from 'react';
+
+const hotelChains = ["Chain A", "Chain B", "Chain C", "Chain D", "Chain E"];
+const hotelCategories = ["1 Star", "2 Star", "3 Star", "4 Star", "5 Star"];
 
 const RoomsManager = () => {
   const [rooms, setRooms] = useState([]);
   const [newRoom, setNewRoom] = useState({
     price: '',
     capacity: '',
-    area: '',
-    sea_view: false,
-    mountain_view: false,
-    extendable: false,
-    hotel_id: ''
+    roomSize: '',
+    hotel_id: '',
+    view: 'none',
+    extendable: '',  // Default empty; admin must choose "yes" or "no"
+    hotelChain: '',
+    hotelCategory: ''
   });
 
   const fetchRooms = async () => {
@@ -28,40 +31,47 @@ const RoomsManager = () => {
   }, []);
 
   const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setNewRoom((prev) => ({
+    const { name, value, type } = e.target;
+    setNewRoom(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === 'number' ? (value < 0 ? 0 : value) : value
     }));
   };
 
   const handleAddRoom = async () => {
-    const roomWithDefaults = {
+    // Ensure the extendable field is explicitly set
+    if (newRoom.extendable === "") {
+      alert("Please select if the room is extendable.");
+      return;
+    }
+    
+    const roomData = {
       price: newRoom.price || 100.00,
       capacity: newRoom.capacity || 'single',
-      area: newRoom.area || 20,
-      sea_view: newRoom.sea_view || false,
-      mountain_view: newRoom.mountain_view || false,
-      extendable: newRoom.extendable || false,
-      hotel_id: newRoom.hotel_id || 1
+      roomSize: newRoom.roomSize || 300,
+      hotel_id: newRoom.hotel_id || 1,
+      view: newRoom.view,
+      extendable: newRoom.extendable === "yes", // convert to boolean
+      hotel_chain: newRoom.hotelChain,
+      hotel_category: newRoom.hotelCategory
     };
 
     try {
       const res = await fetch('http://localhost:3000/api/rooms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(roomWithDefaults)
+        body: JSON.stringify(roomData)
       });
-
       if (res.ok) {
         setNewRoom({
           price: '',
           capacity: '',
-          area: '',
-          sea_view: false,
-          mountain_view: false,
-          extendable: false,
-          hotel_id: ''
+          roomSize: '',
+          hotel_id: '',
+          view: 'none',
+          extendable: '',
+          hotelChain: '',
+          hotelCategory: ''
         });
         fetchRooms();
       } else {
@@ -74,10 +84,7 @@ const RoomsManager = () => {
 
   const handleDeleteRoom = async (id) => {
     try {
-      const res = await fetch(`http://localhost:3000/api/rooms/${id}`, {
-        method: 'DELETE'
-      });
-
+      const res = await fetch(`http://localhost:3000/api/rooms/${id}`, { method: 'DELETE' });
       if (res.ok) {
         fetchRooms();
       } else {
@@ -89,42 +96,61 @@ const RoomsManager = () => {
   };
 
   return (
-    <div className="bg-white shadow-md rounded p-6">
-      <h3 className="text-lg font-bold mb-4">Rooms</h3>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
-        <input name="price" type="number" placeholder="Price" className="border rounded p-2" value={newRoom.price} onChange={handleInputChange} />
-        <select name="capacity" className="border rounded p-2" value={newRoom.capacity} onChange={handleInputChange}>
+    <div className="card">
+      <h3>Rooms &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</h3>
+      <div className="form-container grid grid-cols-2">
+        <input type="number" name="price" min="0" placeholder="Price" className="input" value={newRoom.price} onChange={handleInputChange} />
+        <select name="capacity" className="input" value={newRoom.capacity} onChange={handleInputChange}>
           <option value="">Select Capacity</option>
           <option value="single">Single</option>
           <option value="double">Double</option>
           <option value="suite">Suite</option>
           <option value="family">Family</option>
         </select>
-        <input name="area" type="number" placeholder="Area (sqft)" className="border rounded p-2" value={newRoom.area} onChange={handleInputChange} />
-        <input name="hotel_id" type="number" placeholder="Hotel ID" className="border rounded p-2" value={newRoom.hotel_id} onChange={handleInputChange} />
-        <label className="flex items-center space-x-2">
-          <input type="checkbox" name="sea_view" checked={newRoom.sea_view} onChange={handleInputChange} />
-          <span>Sea View</span>
-        </label>
-        <label className="flex items-center space-x-2">
-          <input type="checkbox" name="mountain_view" checked={newRoom.mountain_view} onChange={handleInputChange} />
-          <span>Mountain View</span>
-        </label>
-        <label className="flex items-center space-x-2">
-          <input type="checkbox" name="extendable" checked={newRoom.extendable} onChange={handleInputChange} />
-          <span>Extendable</span>
-        </label>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded h-fit" onClick={handleAddRoom}>Add Room</button>
+        <input type="number" name="roomSize" min="0" placeholder="Room Size (sqft)" className="input" value={newRoom.roomSize} onChange={handleInputChange} />
+        <input type="number" name="hotel_id" min="0" placeholder="Hotel ID" className="input" value={newRoom.hotel_id} onChange={handleInputChange} />
+        <select name="view" className="input" value={newRoom.view} onChange={handleInputChange}>
+          <option value="none">No View</option>
+          <option value="sea">Sea View</option>
+          <option value="mountain">Mountain View</option>
+        </select>
+        {/* Extendable field with clear label */}
+        <div>
+          <select name="extendable" className="input" value={newRoom.extendable} onChange={handleInputChange}>
+            <option value="">Select if extendable</option>
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+        <select name="hotelChain" className="input" value={newRoom.hotelChain} onChange={handleInputChange}>
+          <option value="">Select Hotel Chain</option>
+          {hotelChains.map((chain, idx) => (
+            <option key={idx} value={chain}>{chain}</option>
+          ))}
+        </select>
+        <select name="hotelCategory" className="input" value={newRoom.hotelCategory} onChange={handleInputChange}>
+          <option value="">Select Hotel Category</option>
+          {hotelCategories.map((cat, idx) => (
+            <option key={idx} value={cat}>{cat}</option>
+          ))}
+        </select>
+        <button className="button" onClick={handleAddRoom}>Add Room</button>
       </div>
-
-      <ul className="space-y-2">
-        {rooms.map((room) => (
-          <li key={room.room_id} className="p-4 border rounded shadow-sm flex justify-between items-center">
-            <span>
-              Room #{room.room_id} | ${room.price} | {room.capacity} | Hotel ID: {room.hotel_id}
-            </span>
-            <button className="text-red-500" onClick={() => handleDeleteRoom(room.room_id)}>Delete</button>
+      <ul>
+        {rooms.map(room => (
+          <li key={room.room_id} className="card">
+            <div>
+              <p><strong>Room #{room.room_id}</strong></p>
+              <p>Price: ${room.price}</p>
+              <p>Capacity: {room.capacity}</p>
+              <p>Size: {room.roomSize || room.area} sqft</p>
+              <p>Hotel ID: {room.hotel_id}</p>
+              <p>Chain: {room.hotel_chain || 'N/A'}</p>
+              <p>Category: {room.hotel_category || 'N/A'}</p>
+              <p>View: {room.sea_view ? "Sea View" : room.mountain_view ? "Mountain View" : "None"}</p>
+              <p>Extendable: {room.extendable ? "Yes" : "No"}</p>
+            </div>
+            <button className="button" onClick={() => handleDeleteRoom(room.room_id)}>Delete</button>
           </li>
         ))}
       </ul>

@@ -1,5 +1,6 @@
-// File: src/components/EmployeesManager.jsx
 import React, { useEffect, useState } from 'react';
+
+const hotelChains = ["Chain A", "Chain B", "Chain C", "Chain D", "Chain E"];
 
 const EmployeesManager = () => {
   const [employees, setEmployees] = useState([]);
@@ -9,7 +10,7 @@ const EmployeesManager = () => {
     last_name: '',
     address: '',
     salary: '',
-    hotel_id: '',
+    hotel_id: '', // now represents a hotel chain
     role_type: ''
   });
 
@@ -39,7 +40,6 @@ const EmployeesManager = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newEmployee)
       });
-
       if (res.ok) {
         setNewEmployee({
           employee_ssn: '',
@@ -64,7 +64,6 @@ const EmployeesManager = () => {
       const res = await fetch(`http://localhost:3000/api/employees/${ssn}`, {
         method: 'DELETE'
       });
-
       if (res.ok) {
         fetchEmployees();
       } else {
@@ -76,27 +75,79 @@ const EmployeesManager = () => {
   };
 
   return (
-    <div className="bg-white shadow-md rounded p-6">
-      <h3 className="text-lg font-bold mb-4">Employees</h3>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
-        <input name="employee_ssn" className="border rounded p-2" placeholder="SSN" value={newEmployee.employee_ssn} onChange={handleInputChange} />
-        <input name="first_name" className="border rounded p-2" placeholder="First Name" value={newEmployee.first_name} onChange={handleInputChange} />
-        <input name="last_name" className="border rounded p-2" placeholder="Last Name" value={newEmployee.last_name} onChange={handleInputChange} />
-        <input name="address" className="border rounded p-2" placeholder="Address" value={newEmployee.address} onChange={handleInputChange} />
-        <input name="salary" type="number" className="border rounded p-2" placeholder="Salary" value={newEmployee.salary} onChange={handleInputChange} />
-        <input name="hotel_id" type="number" className="border rounded p-2" placeholder="Hotel ID" value={newEmployee.hotel_id} onChange={handleInputChange} />
-        <input name="role_type" className="border rounded p-2" placeholder="Role" value={newEmployee.role_type} onChange={handleInputChange} />
-        <button className="bg-blue-600 text-white px-4 py-2 rounded h-fit" onClick={handleAddEmployee}>Add Employee</button>
+    <div className="card">
+      <h3>Employees</h3>
+      <div className="form-container">
+        <input 
+          type="text" 
+          name="employee_ssn" 
+          placeholder="SSN" 
+          className="input" 
+          value={newEmployee.employee_ssn} 
+          onChange={handleInputChange} 
+        />
+        <input 
+          type="text" 
+          name="first_name" 
+          placeholder="First Name" 
+          className="input" 
+          value={newEmployee.first_name} 
+          onChange={handleInputChange} 
+        />
+        <input 
+          type="text" 
+          name="last_name" 
+          placeholder="Last Name" 
+          className="input" 
+          value={newEmployee.last_name} 
+          onChange={handleInputChange} 
+        />
+        <input 
+          type="text" 
+          name="address" 
+          placeholder="Address" 
+          className="input" 
+          value={newEmployee.address} 
+          onChange={handleInputChange} 
+        />
+        <input 
+          type="number" 
+          name="salary" 
+          placeholder="Salary" 
+          className="input" 
+          value={newEmployee.salary} 
+          onChange={handleInputChange} 
+        />
+        <select 
+          name="hotel_id" 
+          className="input" 
+          value={newEmployee.hotel_id} 
+          onChange={handleInputChange}
+        >
+          <option value="">Select Hotel Chain</option>
+          {hotelChains.map((chain, idx) => (
+            <option key={idx} value={chain}>{chain}</option>
+          ))}
+        </select>
+        <input 
+          type="text" 
+          name="role_type" 
+          placeholder="Role" 
+          className="input" 
+          value={newEmployee.role_type} 
+          onChange={handleInputChange} 
+        />
+        <button className="button" onClick={handleAddEmployee}>Add Employee</button>
       </div>
-
-      <ul className="space-y-2">
-        {employees.map((emp) => (
-          <li key={emp.employee_ssn} className="p-4 border rounded shadow-sm flex justify-between items-center">
-            <span>
-              {emp.first_name} {emp.last_name} | Hotel ID: {emp.hotel_id} | Role: {emp.role_type}
-            </span>
-            <button className="text-red-500" onClick={() => handleDeleteEmployee(emp.employee_ssn)}>Delete</button>
+      <ul>
+        {employees.map(emp => (
+          <li
+            key={emp.employee_ssn}
+            className="card"
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+          >
+            <span>{emp.first_name} {emp.last_name} | Hotel: {emp.hotel_id} | Role: {emp.role_type}</span>
+            <button className="button" onClick={() => handleDeleteEmployee(emp.employee_ssn)}>Delete</button>
           </li>
         ))}
       </ul>
