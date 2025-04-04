@@ -15,6 +15,9 @@ const Navbar = () => {
           <h1 className="navbar-brand">HotelHub</h1>
         </div>
         <div className="navbar-right">
+          <Link to="/stats" className="navbar-button">
+            Room Stats
+          </Link>
           <Link to={isAdminPage ? "/search" : "/admin"} className="navbar-button">
             {isAdminPage ? "Switch to User" : "Switch to Admin"}
           </Link>

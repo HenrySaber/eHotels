@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Navbar from './components/Navbar';
 import RoomSearch from './components/RoomSearch';
 import AdminPanel from './components/AdminPanel';
+import RoomStats from './components/RoomStats'; // ✅ Import new component
 import './styles.css';
 
 const App = () => {
@@ -14,7 +15,7 @@ const App = () => {
           <Route path="/" element={<Navigate to="/search" replace />} />
           <Route path="/search" element={<RoomSearch />} />
           <Route path="/admin" element={<AdminPanel />} />
-          <Route path="/contact" element={<p className="heading">Feel free to reach out to us via email or phone.</p>} />
+          <Route path="/stats" element={<RoomStats />} /> {/* ✅ Add route */}
         </Routes>
       </div>
     </Router>
