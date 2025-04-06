@@ -3,9 +3,10 @@ import React, { useEffect, useState } from 'react';
 const hotelChains = ["Evergreen Hospitality", "Crystal Nest Group", "BlueNova Resorts", "MapleLux Collection", " Cedar & Stone Inns"];
 const hotelCategories = ["1 Star", "2 Star", "3 Star", "4 Star", "5 Star"];
 
-
 const RoomsManager = () => {
   const [rooms, setRooms] = useState([]);
+  const [editingRoomId, setEditingRoomId] = useState(null);
+  const [editedRoomData, setEditedRoomData] = useState({});
   const [newRoom, setNewRoom] = useState({
     price: '',
     capacity: '',
@@ -36,6 +37,14 @@ const RoomsManager = () => {
     setNewRoom(prev => ({
       ...prev,
       [name]: type === 'number' ? (value < 0 ? 0 : value) : value
+    }));
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditedRoomData(prev => ({
+      ...prev,
+      [name]: value
     }));
   };
 
@@ -100,6 +109,36 @@ const RoomsManager = () => {
     }
   };
 
+  const handleEdit = (room) => {
+    setEditingRoomId(room.room_id);
+    setEditedRoomData({ ...room });
+  };
+
+  const handleCancel = () => {
+    setEditingRoomId(null);
+    setEditedRoomData({});
+  };
+
+  const handleSave = async () => {
+    try {
+      const res = await fetch(`http://localhost:3000/api/rooms/${editingRoomId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editedRoomData)
+      });
+
+      if (res.ok) {
+        setEditingRoomId(null);
+        setEditedRoomData({});
+        fetchRooms();
+      } else {
+        console.error('Failed to update room');
+      }
+    } catch (err) {
+      console.error('Error updating room', err);
+    }
+  };
+
   return (
     <div className="card">
       <h3>Rooms</h3>
@@ -142,18 +181,49 @@ const RoomsManager = () => {
       <ul>
         {rooms.map(room => (
           <li key={room.room_id} className="card">
-            <div>
-              <p><strong>Room #{room.room_id}</strong></p>
-              <p>Price: ${room.price}</p>
-              <p>Capacity: {room.capacity}</p>
-              <p>Size: {room.area} sqft</p>
-              <p>Hotel ID: {room.hotel_id}</p>
-              <p>Chain: {room.hotel_chain || 'N/A'}</p>
-              <p>Category: {room.hotel_category || 'N/A'}</p>
-              <p>View: {room.sea_view ? "Sea View" : room.mountain_view ? "Mountain View" : "None"}</p>
-              <p>Extendable: {room.extendable ? "Yes" : "No"}</p>
-            </div>
-            <button className="button" onClick={() => handleDeleteRoom(room.room_id)}>Delete</button>
+            {editingRoomId === room.room_id ? (
+              <div>
+                <input className="input" type="number" name="price" value={editedRoomData.price} onChange={handleEditChange} />
+                <input className="input" name="capacity" value={editedRoomData.capacity} onChange={handleEditChange} />
+                <input className="input" name="area" type="number" value={editedRoomData.area} onChange={handleEditChange} />
+                <input className="input" name="hotel_id" value={editedRoomData.hotel_id} onChange={handleEditChange} />
+                <input className="input" name="hotel_chain" value={editedRoomData.hotel_chain || ''} onChange={handleEditChange} />
+                <input className="input" name="hotel_category" value={editedRoomData.hotel_category || ''} onChange={handleEditChange} />
+                <select name="extendable" className="input" value={editedRoomData.extendable ? "yes" : "no"} onChange={(e) =>
+                  setEditedRoomData({ ...editedRoomData, extendable: e.target.value === "yes" })
+                }>
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
+                </select>
+                <select name="view" className="input" value={editedRoomData.sea_view ? "sea" : editedRoomData.mountain_view ? "mountain" : "none"} onChange={(e) =>
+                  setEditedRoomData({
+                    ...editedRoomData,
+                    sea_view: e.target.value === "sea",
+                    mountain_view: e.target.value === "mountain"
+                  })
+                }>
+                  <option value="none">No View</option>
+                  <option value="sea">Sea View</option>
+                  <option value="mountain">Mountain View</option>
+                </select>
+                <button className="button mt-2" onClick={handleSave}>Save</button>
+                <button className="button mt-2 ml-2" onClick={handleCancel}>Cancel</button>
+              </div>
+            ) : (
+              <div>
+                <p><strong>Room #{room.room_id}</strong></p>
+                <p>Price: ${room.price}</p>
+                <p>Capacity: {room.capacity}</p>
+                <p>Size: {room.area} sqft</p>
+                <p>Hotel ID: {room.hotel_id}</p>
+                <p>Chain: {room.hotel_chain || 'N/A'}</p>
+                <p>Category: {room.hotel_category || 'N/A'}</p>
+                <p>View: {room.sea_view ? "Sea View" : room.mountain_view ? "Mountain View" : "None"}</p>
+                <p>Extendable: {room.extendable ? "Yes" : "No"}</p>
+                <button className="button" onClick={() => handleEdit(room)}>Edit</button>
+                <button className="button ml-2" onClick={() => handleDeleteRoom(room.room_id)}>Delete</button>
+              </div>
+            )}
           </li>
         ))}
       </ul>
