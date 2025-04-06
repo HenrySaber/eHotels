@@ -1,40 +1,44 @@
--- Trigger 1: Ensure guest is registered before making a reservation
-CREATE OR REPLACE FUNCTION check_guest_registration()
+-- This ensures a reservation can't be created unless the guest exists
+CREATE OR REPLACE FUNCTION check_guest_exists()
 RETURNS TRIGGER AS $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM Client WHERE NAS = NEW.NAS_client) THEN
-    RAISE EXCEPTION 'Client must be registered before making a reservation';
+  IF NOT EXISTS (
+    SELECT 1 FROM Guest WHERE guest_ssn = NEW.guest_ssn
+  ) THEN
+    RAISE EXCEPTION 'Guest must be registered before making a reservation.';
   END IF;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trg_check_guest_registration
-BEFORE INSERT ON Location_reservation
+CREATE TRIGGER trg_check_guest_exists
+BEFORE INSERT ON Reservation
 FOR EACH ROW
-EXECUTE FUNCTION check_guest_registration();
+EXECUTE FUNCTION check_guest_exists();
 
--- Trigger 2: Auto-assign manager if hotel doesn’t have one
-CREATE OR REPLACE FUNCTION assign_manager()
+-- Only one manager per hotel is allowed
+CREATE OR REPLACE FUNCTION prevent_multiple_managers()
 RETURNS TRIGGER AS $$
 BEGIN
-  IF NEW.type = 'manager' THEN
+  IF NEW.role_type = 'manager' THEN
     IF EXISTS (
-      SELECT 1 FROM Employe WHERE id_hotel = NEW.id_hotel AND type = 'manager'
+      SELECT 1 FROM Employee WHERE hotel_id = NEW.hotel_id AND role_type = 'manager'
     ) THEN
-      RAISE EXCEPTION 'This hotel already has a manager';
+      RAISE EXCEPTION 'This hotel already has a manager assigned.';
     END IF;
   END IF;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trg_assign_manager
-BEFORE INSERT ON Employe
+CREATE TRIGGER trg_prevent_multiple_managers
+BEFORE INSERT ON Employee
 FOR EACH ROW
-EXECUTE FUNCTION assign_manager();
+EXECUTE FUNCTION prevent_multiple_managers();
 
-CREATE OR REPLACE FUNCTION update_room_count_on_insert()
+
+-- Updates hotel room count upon new room insertion
+CREATE OR REPLACE FUNCTION update_room_count()
 RETURNS TRIGGER AS $$
 BEGIN
   UPDATE Hotel
@@ -44,27 +48,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trg_room_insert
+CREATE TRIGGER trg_update_room_count
 AFTER INSERT ON Room
 FOR EACH ROW
-EXECUTE FUNCTION update_room_count_on_insert();
-
-CREATE OR REPLACE FUNCTION prevent_late_guest_reservation()
-RETURNS TRIGGER AS $$
-DECLARE
-  reg_date DATE;
-BEGIN
-  SELECT registration_date INTO reg_date FROM Guest WHERE guest_ssn = NEW.guest_ssn;
-
-  IF reg_date IS NULL OR reg_date > NEW.check_in_date THEN
-    RAISE EXCEPTION 'Guest must be registered before making a reservation';
-  END IF;
-
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trg_prevent_late_guest
-BEFORE INSERT ON Reservation
-FOR EACH ROW
-EXECUTE FUNCTION prevent_late_guest_reservation();
+EXECUTE FUNCTION update_room_count();
